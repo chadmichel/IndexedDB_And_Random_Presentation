@@ -11,7 +11,8 @@
 <script src="libs/jquery.js"></script>
 <link rel="stylesheet" href="libs/qunit.css">
 <script src="libs/jqunit.js"></script>
-  
+
+<script src="javascripts/guid.js"></script>  
 
 <script>
 
@@ -30,11 +31,12 @@ if (!window.indexedDB) {
 
 function open(ready) {	
 
-    var request = window.indexedDB.open("Demo3", 1);      
+    var request = window.indexedDB.open("Demo4", 1);      
+	var db = null;
             
     request.onupgradeneeded = function(event) {
     
-        var db = event.target.result;
+		db = event.target.result;
     
         if (event.oldVersion <= 1) {
 				                                        
@@ -50,23 +52,35 @@ function open(ready) {
     };
     request.onsuccess = function(event) {
         // Do something with request.result!
-        ready();            
+        ready(db);            
     };
     
 }
 
+function put(db, note, callback) {
+    var tx = db.transaction("notes", "readwrite");
+    var store = tx.objectStore("notes");
+    var req = store.put(note);
+            
+    if (callback !== null) {
+        req.onsuccess = function(event) {
+            callback();
+        }
+        req.onerror = function(event) {
+            callback(event);
+        }
+    }
+};
 
 // lets test this...
-asyncTest( "blank", function() {	
-	ok( 1 == "1", "Passed!" );
-	start();
-});
-
 asyncTest(" open database ", function() {
-	open(function() {
-		start();
+	open(function(db) {
+		var id = UUID.generate();
+		put(db, {id: id, title: "a title", date: new Date()}, function() {
+			start();			
+		});
 	});
-		expect(0);
+	expect(0);
 });
 
 </script>
