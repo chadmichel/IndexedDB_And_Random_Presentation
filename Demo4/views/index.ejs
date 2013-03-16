@@ -52,6 +52,7 @@ function open(ready) {
     };
     request.onsuccess = function(event) {
         // Do something with request.result!
+		db = event.target.result;
         ready(db);            
     };
     

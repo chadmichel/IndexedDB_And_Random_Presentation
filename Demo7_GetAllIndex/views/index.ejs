@@ -140,9 +140,9 @@ function forEachByIndex(db, index, callback, itemCallback) {
 	
     var tx = db.transaction(store_name, "readwrite");
     var store = tx.objectStore(store_name); 
-	var index = store.index(index);
+	var index = store.index(index); // retrieve index
     
-    var req = index.openKeyCursor();
+    var req = index.openKeyCursor(); // cycle thru index
     req.onsuccess = function(event) {
         if (event !== null && event.target !== null) {
             var cursor = event.target.result;
@@ -154,7 +154,7 @@ function forEachByIndex(db, index, callback, itemCallback) {
 				cursor.continue();
             }
             else {
-				// no more entries
+				// no more entries 
 				if (callback !== null)
 					callback(null, result);
             }
