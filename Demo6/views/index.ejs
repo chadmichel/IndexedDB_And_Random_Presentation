@@ -92,14 +92,55 @@ function get(db, id, callback) {
     }
 };
 
+function forEach(db, callback, itemCallback) {
+    
+	var result = [];
+	
+    var tx = db.transaction(store_name, "readwrite");
+    var store = tx.objectStore(store_name);            
+    
+    var req = store.openCursor();
+    req.onsuccess = function(event) {
+        if (event !== null && event.target !== null) {
+            var cursor = event.target.result;
+            if (cursor !== null) {
+				result.push(cursor.value);
+				// read next entry
+				if (itemCallback !== null)
+					itemCallback(cursor);
+				cursor.continue();
+            }
+            else {
+				// no more entries
+				if (callback !== null)
+					callback(null, result);
+            }
+        }
+    };
+    req.onerror = function(event) {  
+        if (callback !== null)
+            callback(event);
+    };
+};
+
+function getAll(db, callback) {
+	self.forEach(db, 
+		function(err, result) {
+			callback(result);
+		},
+		function() {
+			
+		});
+};
+
 // lets test this...
 // more node like
 asyncTest(" get all ", function() {
 	open(function(err, db) {
 		var id = UUID.generate();
 		put(db, {id: id, title: "a title", date: new Date()}, function(err) {
-			get(db, id, function(err, note) {
-				ok(note.id === id);
+			getAll(db, function(notes) {
+				ok(notes.length > 0);
 				start();
 			});						
 		});
