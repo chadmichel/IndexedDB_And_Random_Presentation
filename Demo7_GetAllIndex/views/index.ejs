@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+
+
+<body>
+
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+
+<script src="libs/jquery.js"></script>
+<link rel="stylesheet" href="libs/qunit.css">
+<script src="libs/jqunit.js"></script>
+
+<script src="javascripts/guid.js"></script>  
+
+<script>
+
+// From: https://developer.mozilla.org/en-US/docs/IndexedDB/Using_IndexedDB
+// In the following line, you should include the prefixes of implementations you want to test.
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+// DON'T use "var indexedDB = ..." if you're not in a function.
+// Moreover, you may need references to some window.IDB* objects:
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
+// (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
+
+if (!window.indexedDB) {
+    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
+}
+
+var store_name = "notes";
+var db_name = "Demo6";
+
+function open(ready) {	
+
+  var request = window.indexedDB.open(db_name, 1);      
+	var db = null;
+            
+    request.onupgradeneeded = function(event) {
+    
+		db = event.target.result;
+    
+        if (event.oldVersion <= 1) {
+				                                        
+            var notesStore = db.createObjectStore("notes", { keyPath: "id" });
+            notesStore.createIndex("date", "date", { unique: false });
+        }
+   
+    };
+        
+    request.onerror = function(event) {
+        // Do something with request.errorCode!
+        ready(event);
+    };
+    request.onsuccess = function(event) {
+        // Do something with request.result!
+        db = event.target.result;
+        ready(null, db);            
+    };
+    
+}
+
+function put(db, note, callback) {
+    var tx = db.transaction(store_name, "readwrite");
+    var store = tx.objectStore(store_name);
+    var req = store.put(note);
+            
+    if (callback !== null) {
+        req.onsuccess = function(event) {
+            callback();
+        }
+        req.onerror = function(event) {
+            callback(event);
+        }
+    }
+};
+
+function get(db, id, callback) {
+    var tx = db.transaction(store_name, "readwrite");
+    var store = tx.objectStore(store_name);
+    var req = store.get(id);
+            
+    if (callback !== null) {
+        req.onsuccess = function(event) {
+          // if we find entry, return it to callback
+          callback(null, event.srcElement.result);
+        }
+        req.onerror = function(event) {
+            callback(event);
+        }
+    }
+};
+
+function forEach(db, callback, itemCallback) {
+    
+	var result = [];
+	
+    var tx = db.transaction(store_name, "readwrite");
+    var store = tx.objectStore(store_name);            
+    
+    var req = store.openCursor();
+    req.onsuccess = function(event) {
+        if (event !== null && event.target !== null) {
+            var cursor = event.target.result;
+            if (cursor !== null) {
+				result.push(cursor.value);
+				// read next entry
+				if (itemCallback !== null)
+					itemCallback(cursor);
+				cursor.continue();
+            }
+            else {
+				// no more entries
+				if (callback !== null)
+					callback(null, result);
+            }
+        }
+    };
+    req.onerror = function(event) {  
+        if (callback !== null)
+            callback(event);
+    };
+};
+
+function getAll(db, callback) {
+	self.forEach(db, 
+		function(err, result) {
+			callback(result);
+		},
+		function() {
+			
+		});
+};
+
+
+function forEachByIndex(db, index, callback, itemCallback) {
+    
+	var result = [];
+	
+    var tx = db.transaction(store_name, "readwrite");
+    var store = tx.objectStore(store_name); 
+	var index = store.index(index);
+    
+    var req = index.openKeyCursor();
+    req.onsuccess = function(event) {
+        if (event !== null && event.target !== null) {
+            var cursor = event.target.result;
+            if (cursor !== null) {
+				result.push(cursor.value);
+				// read next entry
+				if (itemCallback !== null)
+					itemCallback(cursor);
+				cursor.continue();
+            }
+            else {
+				// no more entries
+				if (callback !== null)
+					callback(null, result);
+            }
+        }
+    };
+    req.onerror = function(event) {  
+        if (callback !== null)
+            callback(event);
+    };
+};
+
+function getAllByDate(db, callback) {
+	self.forEachByIndex(db, "date",
+		function(err, result) {
+			callback(result);
+		},
+		function() {
+			
+		});
+}
+
+// lets test this...
+// more node like
+asyncTest(" get all by date ", function() {
+	open(function(err, db) {
+		var id = UUID.generate();
+		put(db, {id: id, title: "a title", date: new Date()}, function(err) {
+			getAllByDate(db, function(notes) {
+				ok(notes.length > 0);
+				start();
+			});						
+		});
+	});
+	expect(1);
+});
+
+</script>
+
+</body>
+
+
+</html>
