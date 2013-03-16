@@ -31,7 +31,7 @@ if (!window.indexedDB) {
 
 function open(ready) {	
 
-  var request = window.indexedDB.open("Demo4", 1);      
+  var request = window.indexedDB.open("Demo5", 1);      
 	var db = null;
             
     request.onupgradeneeded = function(event) {
@@ -52,6 +52,7 @@ function open(ready) {
     };
     request.onsuccess = function(event) {
         // Do something with request.result!
+        db = event.target.result;
         ready(db);            
     };
     
@@ -72,15 +73,33 @@ function put(db, note, callback) {
     }
 };
 
+function get(db, id, callback) {
+    var tx = db.transaction("notes", "readwrite");
+    var store = tx.objectStore("notes");
+    var req = store.get(id);
+            
+    if (callback !== null) {
+        req.onsuccess = function(event) {
+            callback(event.srcElement.result);
+        }
+        req.onerror = function(event) {
+            callback(event);
+        }
+    }
+};
+
 // lets test this...
 asyncTest(" open database ", function() {
 	open(function(db) {
 		var id = UUID.generate();
 		put(db, {id: id, title: "a title", date: new Date()}, function() {
-			start();			
+      get(db, id, function(note) {
+        ok(note.id === id);
+        start();
+      });						
 		});
 	});
-	expect(0);
+	expect(1);
 });
 
 </script>
