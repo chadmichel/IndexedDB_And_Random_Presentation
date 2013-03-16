@@ -17,13 +17,13 @@ var IndexedDB;
 							
 			req.onsuccess = function(event) {
 				def.resolve();
-			}
+			};
 			req.onerror = function(event) {
 				def.reject(event);
-			}
+			};
 		
 			return def;
-		}
+		};
 		
 		self.get = function(id) {
 
@@ -35,13 +35,13 @@ var IndexedDB;
 					
 			req.onsuccess = function(event) {				
 				def.resolve(event.srcElement.result);
-			}
+			};
 			req.onerror = function(event) {
 				def.reject(event);
-			}
+			};
 
 			return def;
-		}
+		};
 	}
 
 	IndexedDB.openStore = function(initFunction, dbName, storeName) {
