@@ -94,7 +94,7 @@ function get(db, id, callback) {
 
 // lets test this...
 // more node like
-asyncTest(" get all ", function() {
+asyncTest(" get ", function() {
 	open(function(err, db) {
 		var id = UUID.generate();
 		put(db, {id: id, title: "a title", date: new Date()}, function(err) {

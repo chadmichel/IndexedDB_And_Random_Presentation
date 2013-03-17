@@ -74,7 +74,7 @@ function put(db, note, callback) {
 };
 
 // lets test this...
-asyncTest(" open database ", function() {
+asyncTest(" put ", function() {
 	open(function(db) {
 		var id = UUID.generate();
 		put(db, {id: id, title: "a title", date: new Date()}, function() {
